@@ -7,6 +7,9 @@ from pywikibot import exceptions
 import logging
 import pprint
 import os
+from urllib.parse import urlparse
+import tempfile
+from PIL import Image
 
 
 class Model_wiki:
@@ -17,14 +20,31 @@ class Model_wiki:
     )
     logger = logging.getLogger(__name__)
     pp = pprint.PrettyPrinter(indent=4)
+    cachedir='downloads'
     
     def __init__(self):
         pass
+        
         #if not os.path.isfile('../user-config.py'):
         #    raise Exception('''Now you should enter Wikimedia user data in config. Call \n cp user-config.example.py user-config.py
         #\n open user-config.py in text editor, input username,  and run this script next time''')
+    
+    def compress_image(self,file_path,dst):
+        """
+        Compresses an image file to JPEG format 
 
-    def category_intersection_download(self,catlist:list,directory:str):
+        Args:
+            file_path (str): The file path to the image file.
+
+        Returns:
+            None
+        """
+        # Open the image file
+        with Image.open(file_path) as img:
+            # Compress the image to JPEG format
+            img.save(dst, "JPEG", optimize=True)
+        
+    def category_intersection_download(self,catlist:list,directory:str,convert_mode=None):
         assert len(catlist)>0
         
         site = pywikibot.Site("commons", "commons")
@@ -48,42 +68,42 @@ class Model_wiki:
         
 
         final_generator = generators[category_counter]
+        if convert_mode is None:
+            for page in final_generator: 
+                self.dowload_or_cache_read(page)
+        elif convert_mode=='sns':
+            for page in final_generator:
+                url = page.get_file_url() 
+                # IF FILE IS PHOTO OR VIDEO
+                if not url.lower().endswith(('.jpeg','.jpg','.tif','.webp','.webm')): continue
+                temp_filename = self.dowload_or_cache_read(page)
+                ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
+                fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
+                compressed_filename = os.path.join(self.cachedir, fn+'_cmp'+'.jpg')
+                
+                # COMPRESS PHOTO
+                if url.lower().endswith(('.jpeg','.jpg','.tif','.webp')):
+                    self.compress_image(temp_filename,compressed_filename)
+                    os.unlink(temp_filename)
+                    
+                
+                
+                
+                # COMPRESS VIDEO FROM vp9 TO h264
         
-        for page in final_generator:
+    def dowload_or_cache_read(self,FilePage)->str:
+        if not os.path.isdir(self.cachedir):
+            os.makedirs(self.cachedir)
             
-            self.download_from_commons(page.full_url(),directory,printonly=True)
+        url = FilePage.get_file_url()   
+        pageid = FilePage.pageid
+        ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
+        fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
+        filepath = os.path.join(self.cachedir, os.path.basename(urlparse(url).path) )
+        #filepath = os.path.join(self.cachedir,fn+ext )
+        if os.path.isfile(filepath):
+            return filepath
+        FilePage.download(filename=filepath)
+        return filepath
+    
         
-        
-    def download_from_commons(self,url,directory,printonly=False):
-        import requests
-        import os
-        # Set the headers and the base URL for the API request
-        headers = {
-            # 'Authorization': 'Bearer YOUR_ACCESS_TOKEN',
-            'User-Agent': 'YOUR_APP_NAME (YOUR_EMAIL_OR_CONTACT_PAGE)'
-        }
-        base_url = 'https://api.wikimedia.org/core/v1/commons/file/'
-
-        # Extract the filename from the URL
-        filename = url.split('/')[-1]
-
-        # Construct the full URL with the filename
-        url = base_url + filename
-
-        # Make the request and get the JSON response
-        response = requests.get(url, headers=headers).json()
-
-        # Get the file URL and the file extension from the response
-        file_url = response['original']['url']
-
-
-        # Download the file using requests
-        r = requests.get(file_url, allow_redirects=True)
-
-        # Save the file to the current working directory with the same name and extension
-        dest_path = os.path.join(directory, response['title'] )
-        
-        if printonly: 
-            self.logger.debug(file_url+'  >>>   '+dest_path)
-            return
-        open(dest_path, 'wb').write(r.content)
