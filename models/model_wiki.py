@@ -48,8 +48,8 @@ class Model_wiki:
         assert len(catlist)>0
         
         site = pywikibot.Site("commons", "commons")
-        site.login()
-        site.get_tokens("csrf")  # preload csrf token
+        #site.login()
+        #site.get_tokens("csrf")  # preload csrf token
         
         category_objects=dict()
         generators=dict()
