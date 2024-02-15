@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+os.environ["PYWIKIBOT_NO_USER_CONFIG"] = '2'
+
 import pywikibot
 from pywikibot import pagegenerators
 from pywikibot import exceptions
