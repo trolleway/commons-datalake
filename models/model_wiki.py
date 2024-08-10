@@ -13,11 +13,11 @@ import os
 from urllib.parse import urlparse
 import tempfile
 from PIL import Image
-
+import sys
 
 class Model_wiki:
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.WARNING,
         format="%(asctime)s %(levelname)-8s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
@@ -62,7 +62,7 @@ class Model_wiki:
         generators[category_counter] = pagegenerators.CategorizedPageGenerator(
             category_objects[0], recurse=True, start=None, total=None, content=True, namespaces=None)
         
-        
+
         if len(catlist)>1:
             for category in catlist[1:]:
                 category_counter = category_counter + 1
@@ -71,15 +71,30 @@ class Model_wiki:
         
 
         final_generator = generators[category_counter]
-        if convert_mode is None:
+
+        def spinning_cursor():
+            while True:
+                for cursor in '|/-\\':
+                    yield cursor
+        spinner = spinning_cursor()
+
+                   
+            
+        if convert_mode is None or convert_mode=='raw':
             for page in final_generator: 
+                sys.stdout.write(next(spinner))
+                sys.stdout.flush()
                 self.dowload_or_cache_read(page)
+                sys.stdout.write('\b') 
         elif convert_mode=='sns':
             for page in final_generator:
                 url = page.get_file_url() 
                 # IF FILE IS PHOTO OR VIDEO
                 if not url.lower().endswith(('.jpeg','.jpg','.tif','.webp','.webm')): continue
+                sys.stdout.write(next(spinner))
+                sys.stdout.flush()
                 temp_filename = self.dowload_or_cache_read(page)
+                sys.stdout.write('\b') 
                 ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
                 fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
                 compressed_filename = os.path.join(self.cachedir, fn+'_cmp'+'.jpg')
@@ -105,8 +120,19 @@ class Model_wiki:
         filepath = os.path.join(self.cachedir, os.path.basename(urlparse(url).path) )
         #filepath = os.path.join(self.cachedir,fn+ext )
         if os.path.isfile(filepath):
+            self.logger.info('already downloaded '+filepath)
             return filepath
-        FilePage.download(filename=filepath)
+        try:
+            FilePage.download(filename=filepath)
+        except OSError as exc:
+            if exc.errno == 36:
+                #handle_filename_too_long
+                filename, file_extension = os.path.splitext(os.path.basename(urlparse(url).path))
+                filepath = os.path.join(self.cachedir, str(FilePage.pageid)+''+file_extension)
+                FilePage.download(filename=filepath)
+
+            else:
+                raise  # re-raise previously caught exception
         return filepath
     
         

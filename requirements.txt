@@ -1,2 +1,2 @@
 pillow
-pywikibot
+pywikibot==9.2.1

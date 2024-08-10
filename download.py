@@ -11,7 +11,9 @@ if __name__ == '__main__':
     python3 download.py -ci "ZiU-682 in Saint Petersburg" "Photographs_by_Artem_Svetlov/Saint_Petersburg/Trolleybuses"
     ''')
 
-    parser.add_argument('-ci','--categories_intersection', type=str, required=True, nargs=2, help='list of commons categories for intersection search')
+    parser.add_argument('-ci','--categories_intersection', type=str, required=False, nargs=2, help='list of commons categories for intersection search')
+    parser.add_argument('-cat','--category', type=str, required=False,  help='commons category for download')
+    parser.add_argument('--target', type=str, choices=['raw','sns'], default='sns', required=False,  help='commons category for download')
     # PROPOSED ARGUMENTS:
     # --target raw Download source files as is
     # --target sns compress tiff/webp images to jpeg, video to mp4, maybe downsize very big canvas. adds unsharp mask
@@ -23,10 +25,16 @@ if __name__ == '__main__':
     
     
     modelwiki=Model_wiki()
-    modelwiki.category_intersection_download(
-        [args.categories_intersection[0],args.categories_intersection[1]],
-        'downloads',convert_mode='sns')
     
+    convert_mode=args.target
+    if args.categories_intersection is not None and len(args.categories_intersection)>0:
+        modelwiki.category_intersection_download(
+            args.categories_intersection,
+            'downloads',convert_mode=convert_mode)
+    elif args.category is not None:
+        modelwiki.category_intersection_download(
+            [args.category],
+            'downloads',convert_mode=convert_mode)
 
     
     
