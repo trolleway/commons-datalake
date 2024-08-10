@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 import tempfile
 from PIL import Image
 import sys
+import shutil
 
 class Model_wiki:
     logging.basicConfig(
@@ -80,29 +81,33 @@ class Model_wiki:
 
                    
             
-        if convert_mode is None or convert_mode=='raw':
+        '''if convert_mode is None or convert_mode=='raw':
             for page in final_generator: 
                 sys.stdout.write(next(spinner))
                 sys.stdout.flush()
                 self.dowload_or_cache_read(page)
                 sys.stdout.write('\b') 
         elif convert_mode=='sns':
-            for page in final_generator:
-                url = page.get_file_url() 
-                # IF FILE IS PHOTO OR VIDEO
-                temp_filename = self.dowload_or_cache_read(page)
-                if not url.lower().endswith(('.jpeg','.jpg','.tif','.webp','.webm')): continue
-                sys.stdout.write(next(spinner))
-                sys.stdout.flush()
-                sys.stdout.write('\b') 
-                #ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
-                #fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
+        '''
+        for page in final_generator:
+            url = page.get_file_url() 
+            # IF FILE IS PHOTO OR VIDEO
+            cache_filename = self.dowload_or_cache_read(page)
+            #if not url.lower().endswith(('.jpeg','.jpg','.tif','.webp','.webm')): continue
+            sys.stdout.write(next(spinner))
+            sys.stdout.flush()
+            sys.stdout.write('\b') 
+            ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
+            fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
+            if convert_mode == 'sns':
                 compressed_filename = os.path.join(directory, str(page.pageid)+'_cmp'+'.jpg')
                 
                 # COMPRESS PHOTO
                 if url.lower().endswith(('.jpeg','.jpg','.tif','.webp')):
-                    self.compress_image(temp_filename,compressed_filename)
-
+                    self.compress_image(cache_filename,compressed_filename)
+            else:
+                out_filename = os.path.join(directory, str(page.pageid)+''+ext)
+                shutil.copyfile(cache_filename, out_filename)
                     
                 
                 
