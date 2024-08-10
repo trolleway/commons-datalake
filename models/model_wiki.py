@@ -23,7 +23,7 @@ class Model_wiki:
     )
     logger = logging.getLogger(__name__)
     pp = pprint.PrettyPrinter(indent=4)
-    cachedir='downloads'
+    cachedir='imgcache'
     
     def __init__(self):
         pass
@@ -90,19 +90,19 @@ class Model_wiki:
             for page in final_generator:
                 url = page.get_file_url() 
                 # IF FILE IS PHOTO OR VIDEO
+                temp_filename = self.dowload_or_cache_read(page)
                 if not url.lower().endswith(('.jpeg','.jpg','.tif','.webp','.webm')): continue
                 sys.stdout.write(next(spinner))
                 sys.stdout.flush()
-                temp_filename = self.dowload_or_cache_read(page)
                 sys.stdout.write('\b') 
-                ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
-                fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
-                compressed_filename = os.path.join(self.cachedir, fn+'_cmp'+'.jpg')
+                #ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
+                #fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
+                compressed_filename = os.path.join(directory, str(page.pageid)+'_cmp'+'.jpg')
                 
                 # COMPRESS PHOTO
                 if url.lower().endswith(('.jpeg','.jpg','.tif','.webp')):
                     self.compress_image(temp_filename,compressed_filename)
-                    os.unlink(temp_filename)
+
                     
                 
                 
@@ -115,24 +115,16 @@ class Model_wiki:
             
         url = FilePage.get_file_url()   
         pageid = FilePage.pageid
-        ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
-        fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
-        filepath = os.path.join(self.cachedir, os.path.basename(urlparse(url).path) )
+        filename, file_extension = os.path.splitext(os.path.basename(urlparse(url).path))
+        
+        filepath = os.path.join(self.cachedir, str(FilePage.pageid)+''+file_extension )
         #filepath = os.path.join(self.cachedir,fn+ext )
         if os.path.isfile(filepath):
             self.logger.info('already downloaded '+filepath)
             return filepath
-        try:
-            FilePage.download(filename=filepath)
-        except OSError as exc:
-            if exc.errno == 36:
-                #handle_filename_too_long
-                filename, file_extension = os.path.splitext(os.path.basename(urlparse(url).path))
-                filepath = os.path.join(self.cachedir, str(FilePage.pageid)+''+file_extension)
-                FilePage.download(filename=filepath)
 
-            else:
-                raise  # re-raise previously caught exception
+        FilePage.download(filename=filepath)
+        
         return filepath
     
         
