@@ -25,9 +25,16 @@ class Model_wiki:
     logger = logging.getLogger(__name__)
     pp = pprint.PrettyPrinter(indent=4)
     cachedir='imgcache'
+    cachedfiles_list = list()
     
     def __init__(self):
-        pass
+        
+        
+        if not os.path.isdir(self.cachedir):
+            os.makedirs(self.cachedir)
+        self.cachedfiles_list = os.listdir(self.cachedir)
+        
+        pywikibot.config.max_retries=10
         
         #if not os.path.isfile('../user-config.py'):
         #    raise Exception('''Now you should enter Wikimedia user data in config. Call \n cp user-config.example.py user-config.py
@@ -50,6 +57,7 @@ class Model_wiki:
         
     def category_intersection_download(self,catlist:list,directory:str,convert_mode=None):
         assert len(catlist)>0
+        counter = 0
         
         site = pywikibot.Site("commons", "commons")
         #site.login()
@@ -89,14 +97,26 @@ class Model_wiki:
                 sys.stdout.write('\b') 
         elif convert_mode=='sns':
         '''
+        
+        listfiles_cache = os.listdir(self.cachedir)
+        
         for page in final_generator:
-            url = page.get_file_url() 
+            try:
+                url = page.get_file_url() 
+            except:
+                continue
             # IF FILE IS PHOTO OR VIDEO
             cache_filename = self.dowload_or_cache_read(page)
             #if not url.lower().endswith(('.jpeg','.jpg','.tif','.webp','.webm')): continue
-            sys.stdout.write(next(spinner))
-            sys.stdout.flush()
-            sys.stdout.write('\b') 
+            
+            counter = counter+1
+            print('file '+str(counter), end='\r')
+            #sys.stdout.write(next(spinner))
+            #sys.stdout.flush()
+            #sys.stdout.write('\b') 
+            
+            
+            
             ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
             fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
             if convert_mode == 'sns':
@@ -104,10 +124,12 @@ class Model_wiki:
                 
                 # COMPRESS PHOTO
                 if url.lower().endswith(('.jpeg','.jpg','.tif','.webp')):
-                    self.compress_image(cache_filename,compressed_filename)
+                    if not os.path.isfile(compressed_filename):
+                        self.compress_image(cache_filename,compressed_filename)
             else:
                 out_filename = os.path.join(directory, str(page.pageid)+''+ext)
-                shutil.copyfile(cache_filename, out_filename)
+                if not os.path.isfile(out_filename):
+                    shutil.copyfile(cache_filename, out_filename)
                     
                 
                 
@@ -115,21 +137,24 @@ class Model_wiki:
                 # COMPRESS VIDEO FROM vp9 TO h264
         
     def dowload_or_cache_read(self,FilePage)->str:
-        if not os.path.isdir(self.cachedir):
-            os.makedirs(self.cachedir)
             
         url = FilePage.get_file_url()   
         pageid = FilePage.pageid
         filename, file_extension = os.path.splitext(os.path.basename(urlparse(url).path))
         
-        filepath = os.path.join(self.cachedir, str(FilePage.pageid)+''+file_extension )
+        cache_filename = str(FilePage.pageid)+''+file_extension
+        cache_filepath = os.path.join(self.cachedir, cache_filename )
         #filepath = os.path.join(self.cachedir,fn+ext )
-        if os.path.isfile(filepath):
-            self.logger.info('already downloaded '+filepath)
-            return filepath
+        if cache_filename is self.cachedfiles_list:
+            return cache_filepath
+        if os.path.isfile(cache_filepath):
+            self.logger.info('already downloaded '+cache_filepath)
+            self.cachedfiles_list.append(cache_filename)
+            return cache_filepath
 
-        FilePage.download(filename=filepath)
+        FilePage.download(filename=cache_filepath)
+        self.cachedfiles_list.append(cache_filename)
         
-        return filepath
+        return cache_filepath
     
         
