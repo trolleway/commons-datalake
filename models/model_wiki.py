@@ -253,6 +253,7 @@ exiftool -keywords-=one -keywords+=one -keywords-=two -keywords+=two DIR
 
         # workaround for write utf-8 keywords: write them to file
         argfiletext = ''
+
         if isinstance(keywords, list) and len(keywords) > 0:
             for keyword in keywords:
                 argfiletext += '-keywords-='+keyword+''+" \n"+'-keywords+='+keyword+' '+"\n"
@@ -260,6 +261,8 @@ exiftool -keywords-=one -keywords+=one -keywords-=two -keywords+=two DIR
         argfile = tempfile.NamedTemporaryFile()
         argfilename = 't.txt'
         with open(argfilename, 'w') as f:
+            print(f'write to {argfilename}')
+            print(argfiletext)
             f.write(argfiletext)
 
         cmd = [self.exiftool_path, '-preserve', '-overwrite_original', '-charset iptc=UTF8', '-charset', 'utf8', '-codedcharacterset=utf8',
@@ -386,53 +389,7 @@ Kaliningrad, Russia - August 28 2021: Tram car Tatra KT4 in city streets, in red
         )
         
         tags.append(city_label)
-        
-        #print(desc)
-        
-        return desc,desc
+        return desc,tags
 
-        objects_wikidata = list()
-        for obj_wdid in wikidata_list:
-            obj_wdid = modelwiki.wikidata_input2id(obj_wdid)
-            obj_wd = modelwiki.get_wikidata_simplified(obj_wdid)
-            objects_wikidata.append(obj_wd)
-
-        city_wd = modelwiki.get_wikidata_simplified(city_wdid)
-
-        # get country, only actual values.
-        
-        country_wdid = modelwiki.get_best_claim(city_wdid,'P17')
-        country_wd = modelwiki.get_wikidata_simplified(country_wdid)
-
-        try:
-            dt_obj = self.image2datetime(filename)
-        except:
-            assert date is not None, 'in image '+filename + \
-                'date can not be read from exif, need set date in --date yyyy-mm-dd'
-            dt_obj = datetime.strptime(date, "%Y-%m-%d")
-
-        object_captions = list()
-        for obj_wd in objects_wikidata:
-            object_captions.append(obj_wd['labels']['en'])
-
-        d = '{city}, {country} - {date}: {caption}'.format(
-            city=city_wd['labels']['en'],
-            country=country_wd["labels"]["en"],
-            date=dt_obj.strftime("%B %-d %Y"),
-            caption=' '.join(object_captions)
-        )
-
-        for obj_wd in objects_wikidata:
-            keywords.append(obj_wd['labels']['en'])
-            if 'aliaces' in obj_wd:
-                aliases = obj_wd['aliases'].get('en', None)
-                if type(aliases) == list and len(aliases) > 0:
-                    keywords += aliases
-
-        keywords.append(city_wd['labels']['en'])
-        keywords.append(city_wd['labels']['ru'])
-        keywords.append(country_wd["labels"]["ru"])
-
-        return d, keywords
     
 
