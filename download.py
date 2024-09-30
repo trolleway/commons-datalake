@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-ci','--categories_intersection', type=str, required=False, nargs=2, help='list of commons categories for intersection search')
     parser.add_argument('-cat','--category', type=str, required=False,  help='commons category for download')
-    parser.add_argument('--target', type=str, choices=['raw','sns'], default='sns', required=False,  help='commons category for download')
+    parser.add_argument('--target', type=str, choices=['raw','sns','stocks'], default='sns', required=False,  help='commons category for download')
     # PROPOSED ARGUMENTS:
     # --target raw Download source files as is
     # --target sns compress tiff/webp images to jpeg, video to mp4, maybe downsize very big canvas. adds unsharp mask
