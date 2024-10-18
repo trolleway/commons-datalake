@@ -123,7 +123,7 @@ class Model_wiki:
             return dt_obj 
 
             
-    def category_intersection_download(self,catlist:list,directory:str,convert_mode=None):
+    def category_intersection_download(self,catlist:list,directory:str,convert_mode=None, stringfilter=None):
         assert len(catlist)>0
         counter = 0
         
@@ -146,7 +146,9 @@ class Model_wiki:
                 category_objects[category_counter] = pywikibot.Category(site, category)
                 generators[category_counter] = pagegenerators.CategoryFilterPageGenerator(generators[category_counter-1], [category_objects[category_counter]])
         
-
+        if stringfilter is not None:
+            category_counter =  category_counter + 1
+            generators[category_counter] = pagegenerators.RegexBodyFilterPageGenerator(generators[category_counter-1], stringfilter)
         final_generator = generators[category_counter]
 
         def spinning_cursor():
