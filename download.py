@@ -25,16 +25,17 @@ if __name__ == '__main__':
     
     
     modelwiki=Model_wiki()
+    dir='commons_basket"
     
     convert_mode=args.target
     if args.categories_intersection is not None and len(args.categories_intersection)>0:
         modelwiki.category_intersection_download(
             args.categories_intersection,
-            'downloads',convert_mode=convert_mode)
+            dir',convert_mode=convert_mode)
     elif args.category is not None:
         modelwiki.category_intersection_download(
             [args.category],
-            'downloads',convert_mode=convert_mode)
+            dir,convert_mode=convert_mode)
 
     
     
