@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-ci','--categories_intersection', type=str, required=False, nargs=2, help='list of commons categories for intersection search')
     parser.add_argument('-cat','--category', type=str, required=False,  help='commons category for download')
-    parser.add_argument('--target', type=str, choices=['raw','sns','stocks'], default='sns', required=False,  help='commons category for download')
+    parser.add_argument('--target', type=str, choices=['raw','sns','stocks','yandex_disk'], default='sns', required=False,  help='commons category for download')
     # PROPOSED ARGUMENTS:
     # --target raw Download source files as is
     # --target sns compress tiff/webp images to jpeg, video to mp4, maybe downsize very big canvas. adds unsharp mask
@@ -25,13 +25,13 @@ if __name__ == '__main__':
     
     
     modelwiki=Model_wiki()
-    dir='commons_basket"
+    dir='commons_basket'
     
     convert_mode=args.target
     if args.categories_intersection is not None and len(args.categories_intersection)>0:
         modelwiki.category_intersection_download(
             args.categories_intersection,
-            dir',convert_mode=convert_mode)
+            dir,convert_mode=convert_mode)
     elif args.category is not None:
         modelwiki.category_intersection_download(
             [args.category],
