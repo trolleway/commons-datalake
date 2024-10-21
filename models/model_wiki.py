@@ -187,7 +187,8 @@ class Model_wiki:
             #sys.stdout.write('\b') 
             
             
-            
+            if not os.path.exists(directory):
+               os.makedirs(directory)
             ext = os.path.splitext(os.path.basename(urlparse(url).path))[1]
             fn=os.path.splitext(os.path.basename(urlparse(url).path))[0]
             if convert_mode == 'sns':
